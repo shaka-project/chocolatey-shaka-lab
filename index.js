@@ -23,8 +23,6 @@ const nupkgFiles = fs.globSync('*.nupkg');
 // Feed them to the CLI module through argv.
 const originalArgv = process.argv;
 process.argv = originalArgv.slice(0, 2).concat(nupkgFiles);
-console.log('original argv', originalArgv);
-console.log('new argv', process.argv);
 
 // Load the CLI module (an express app).
 const app = require('express-chocolatey-server/cli');
