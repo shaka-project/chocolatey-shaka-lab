@@ -27,5 +27,9 @@ process.argv = originalArgv.slice(0, 2).concat(nupkgFiles);
 // Load the CLI module (an express app).
 const app = require('express-chocolatey-server/cli');
 
+// Load express explicitly, without which Vercel will reject this as a "valid"
+// entrypoint.
+const express = require('express');
+
 // Export it to Vercel.
 module.exports = app;
