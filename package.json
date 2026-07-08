@@ -2,10 +2,7 @@
   "dependencies": {
     "express-chocolatey-server": "^1.1.0"
   },
-  "scripts": {
-    "start": "express-chocolatey-server *.nupkg"
-  },
   "engines": {
-    "node": "22.x.x"
+    "node": "24.x.x"
   }
 }
