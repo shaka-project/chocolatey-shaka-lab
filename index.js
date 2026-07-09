@@ -14,22 +14,48 @@
  * limitations under the License.
  */
 
-// Vercel entrypoint, wrapping express-chocolatey-server's CLI.
+// Vercel entrypoint, wrapping express-chocolatey-server.
 
-// Find all the nupkg files.
-const fs = require('node:fs');
-const nupkgFiles = fs.globSync('*.nupkg');
-
-// Feed them to the CLI module through argv.
-const originalArgv = process.argv;
-process.argv = originalArgv.slice(0, 2).concat(nupkgFiles);
-
-// Load the CLI module (an express app).
-const app = require('express-chocolatey-server/cli');
-
-// Load express explicitly, without which Vercel will reject this as a "valid"
-// entrypoint.
 const express = require('express');
+const fs = require('node:fs');
+
+const chocolateyServer = require('express-chocolatey-server');
+
+const app = express();
+const port = process.env['PORT'] || 8000;
+
+// Express middleware that logs all requests.
+function loggingMiddleware(req, res, next) {
+  console.log(req.method, req.path, req.query);
+  next();
+}
+
+// Log requests.
+app.use(loggingMiddleware);
+
+// Load metadata about Chocolatey packages.
+const packagePaths = fs.globSync('*.nupkg');
+if (!packagePaths.length) {
+  console.log('Please specify paths to Chocolatey packages.');
+  process.exit(1);
+}
+const packageMetadataList = packagePaths.map((path) => {
+  return chocolateyServer.readPackageMetadata(path);
+});
+
+console.log('Loaded packages:', packageMetadataList);
+
+// Configure Chocolatey server routes at the root.
+chocolateyServer.configureRoutes(app, packageMetadataList, {
+	// Configure an explicit URL root, without which the server can't guess the
+	// correct Vercel origin to construct absolute download URLs.
+  urlRoot: 'https://chocolatey.shakalab.rocks',
+});
+
+// Start the server.
+app.listen(port, () => {
+  console.log(`Listening on port ${port}`)
+});
 
 // Export it to Vercel.
 module.exports = app;
